@@ -6,7 +6,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                       .withInput  ("Input",  juce::AudioChannelSet::mono(), true)
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
@@ -88,6 +88,32 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    // init NAM model
+    mModel = nam::get_dsp(MarshallModel);
+    mModel->ResetAndPrewarm(sampleRate, samplesPerBlock);
+
+    detuneL = std::make_unique<giml::Detune<float>>(sampleRate);
+    detuneR = std::make_unique<giml::Detune<float>>(sampleRate);
+    longDelay = std::make_unique<giml::Delay<float>>(sampleRate, 1000);
+    shortDelay = std::make_unique<giml::Delay<float>>(sampleRate, 1000);
+
+    // init giml fx
+    detuneL->enable();
+    detuneR->enable();
+    longDelay->enable();
+    shortDelay->enable();
+    detuneL->setPitchRatio(0.993);
+    detuneR->setPitchRatio(1.007);
+    longDelay->setDelayTime(798);
+    longDelay->setFeedback(0.20);
+    longDelay->setBlend(1.0);
+    longDelay->setDamping(0.7);
+    shortDelay->setDelayTime(398);
+    shortDelay->setFeedback(0.30);
+    shortDelay->setBlend(1.0);
+    shortDelay->setDamping(0.7);
+
     juce::ignoreUnused (sampleRate, samplesPerBlock);
 }
 
@@ -145,12 +171,15 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
+
+    for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
+        float input = buffer.getSample(0, sample);
+        float dry = 0.f;
+        mModel->process(&input, &dry, 1);
+        buffer.setSample(0, sample, dry + (0.31 * longDelay->processSample(detuneL->processSample(dry)))); 
+        buffer.setSample(1, sample, dry + (0.31 * shortDelay->processSample(detuneR->processSample(dry))));
     }
+
 }
 
 //==============================================================================

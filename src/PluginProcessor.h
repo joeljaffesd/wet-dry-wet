@@ -2,6 +2,14 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#define NAM_SAMPLE_FLOAT
+#define EIGEN_MAX_ALIGN_BYTES 0 
+#define EIGEN_DONT_VECTORIZE
+
+#include "../include/Gimmel/include/gimmel.hpp"
+#include "../include/NeuralAmpModelerCore/NAM/all.h"
+#include "../model/MarshallModel.h"
+
 //==============================================================================
 class AudioPluginAudioProcessor final : public juce::AudioProcessor
 {
@@ -45,4 +53,10 @@ public:
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
+
+    std::unique_ptr<nam::DSP> mModel;
+    std::unique_ptr<giml::Detune<float>> detuneL; 
+    std::unique_ptr<giml::Detune<float>> detuneR;
+    std::unique_ptr<giml::Delay<float>> longDelay;
+    std::unique_ptr<giml::Delay<float>> shortDelay;
 };
