@@ -3,11 +3,12 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #define NAM_SAMPLE_FLOAT
-#define EIGEN_MAX_ALIGN_BYTES 0 
-#define EIGEN_DONT_VECTORIZE
+// #define EIGEN_MAX_ALIGN_BYTES 0 
+// #define EIGEN_DONT_VECTORIZE
 
 #include "../include/Gimmel/include/gimmel.hpp"
-#include "../include/NeuralAmpModelerCore/NAM/all.h"
+#include "../include/NeuralAmpModelerCore/NAM/get_dsp.h"
+#include "../include/NeuralAmpModelerCore/NAM/dsp.h"
 #include "../model/MarshallModel.h"
 
 //==============================================================================
