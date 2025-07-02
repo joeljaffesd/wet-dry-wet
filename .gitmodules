@@ -4,6 +4,3 @@
 [submodule "include/Gimmel"]
 	path = include/Gimmel
 	url = https://github.com/jaffco/Gimmel
-[submodule "include/NeuralAmpModelerCore"]
-	path = include/NeuralAmpModelerCore
-	url = https://github.com/joeljaffesd/NeuralAmpModelerCore
