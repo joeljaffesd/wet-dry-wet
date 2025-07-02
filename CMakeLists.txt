@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
 set(PROJECT_NAME WETDRYWET) # set project name with a variable
 project(${PROJECT_NAME} VERSION 0.0.1)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_subdirectory(include/JUCE)    
-add_subdirectory(include/NeuralAmpModelerCore)
+add_subdirectory(include/RTNeural)
 
 # If you are building a VST2 or AAX plugin, CMake needs to be told where to find these SDKs on your
 # system. This setup should be done before calling `juce_add_plugin`.
@@ -50,6 +56,11 @@ target_sources(${PROJECT_NAME}
         src/PluginEditor.cpp
         src/PluginProcessor.cpp)
 
+target_include_directories(${PROJECT_NAME} 
+    PRIVATE 
+        ${CMAKE_CURRENT_LIST_DIR}/include/RTNeural/modules/rt-nam
+        ${CMAKE_CURRENT_LIST_DIR}/model)
+
 # `target_compile_definitions` adds some preprocessor definitions to our target. In a Projucer
 # project, these might be passed in the 'Preprocessor Definitions' field. JUCE modules also make use
 # of compile definitions to switch certain features on/off, so if there's a particular feature you
@@ -65,8 +76,6 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2=0)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -w) # ignore warnings
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include/NeuralAmpModelerCore/NAM)
 
 # If your target needs extra binary assets, you can add them here. The first argument is the name of
 # a new static library target that will include all the binary resources. There is an optional
@@ -90,4 +99,5 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags)
+        juce::juce_recommended_warning_flags
+        RTNeural)

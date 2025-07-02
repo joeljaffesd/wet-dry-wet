@@ -90,8 +90,9 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     // initialisation that you need..
 
     // init NAM model
-    mModel = nam::get_dsp(MarshallModel);
-    mModel->ResetAndPrewarm(sampleRate, samplesPerBlock);
+    mModel = std::make_unique<giml::AmpModeler<float, MarshallModelLayer1, MarshallModelLayer2>>();
+    mModel->toggle(true); // enable model
+    mModel->loadModel(mWeights.weights); // load model weights
 
     detuneL = std::make_unique<giml::Detune<float>>(sampleRate);
     detuneR = std::make_unique<giml::Detune<float>>(sampleRate);
@@ -103,8 +104,8 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     detuneR->enable();
     longDelay->enable();
     shortDelay->enable();
-    detuneL->setPitchRatio(0.993);
-    detuneR->setPitchRatio(1.007);
+    detuneL->setPitchRatio(0.995);
+    detuneR->setPitchRatio(1.005);
     longDelay->setDelayTime(798);
     longDelay->setFeedback(0.20);
     longDelay->setBlend(1.0);
@@ -174,8 +175,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
         float input = buffer.getSample(0, sample);
-        float dry = 0.f;
-        mModel->process(&input, &dry, 1);
+        float dry = mModel->processSample(input);
         buffer.setSample(0, sample, dry + (0.31 * longDelay->processSample(detuneL->processSample(dry)))); 
         buffer.setSample(1, sample, dry + (0.31 * shortDelay->processSample(detuneR->processSample(dry))));
     }
